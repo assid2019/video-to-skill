@@ -13,12 +13,18 @@ Triggers: a video URL or file, "turn this video into a skill", "learn from this 
    If `"ok": false`: say so in one sentence, then run `PY scripts/bootstrap.py --json --no-skill` (2 to 10 min: give it a 15-minute timeout or run it in the background, do not interrupt it). Only if that fails, follow [LLM_SETUP.md](LLM_SETUP.md).
 3. **Method** — follow [SKILL.md](SKILL.md) with `SKILL_DIR` = the root of this repo. Always run the scripts with a **relative path** from the root (`PY scripts/extract.py …`): those are the commands the repo's permission rules allow.
    Working folder: `v2s_work/<short-id>/` (e.g. the YouTube id).
+   Between watching the video and delivering the skill, apply [references/skill-template.md](references/skill-template.md) sections A–D in this order:
+   - **Score before writing (A)**: Completeness, Specificity, Accuracy, Executability, each HIGH/MEDIUM/LOW, from narration **and** frames. Any MEDIUM → fill the gaps from official docs (checked, or marked `unchecked`). LOW with nothing recoverable → no skill, report why. Executability LOW → write it as a guided checklist and say so at the end, without asking.
+   - **Tag every step (B)**: `[EXECUTE]` (Claude runs it: shell, code, device CLI over SSH), `[HAND OFF]` (exact click path or command, then "Wait for confirmation before continuing."), `[DECIDE]` (options + trade-offs). Keep every `[t=MM:SS]` citation.
+   - **Self-check items 12–18 (C)**, fix every failure, **then** `PY scripts/validate_skill.py skills_out/<name>`.
+   - **Dry run (D)**: replay only the safe bash steps in a `mktemp -d` folder (local, no sudo, no network/system change, no remote device). Walk through device and hand-off steps on paper. Write the honest result in the skill's Verification block.
 4. **Video longer than 45 min** — long-video mode of SKILL.md:
    - one `general-purpose` sub-agent **per part, all launched in parallel**, with the instruction: "Read and carry out `<absolute path>/part_NN/AGENT_PROMPT.md`. Write the notes in <the user's language>. Only write the notes file it names. Reply in 3 lines.";
    - then `PY scripts/assemble.py v2s_work/<id> --check`: a failing part (incomplete visual log, missing notes) → relaunch **its** sub-agent with the reason;
-   - then plan → `assemble.py --plan … --out skills_out/<name>` → merges → the skill's `SKILL.md`.
+   - then plan → `assemble.py --plan … --out skills_out/<name>` → merges → the skill's `SKILL.md`;
+   - then score, tag, self-check, validate and dry-run the assembled skill as in step 3. Score from the merged notes; tags go on the procedure steps of `SKILL.md`.
 5. **Delivery — automatic, no question** — the final skill goes to `skills_out/<name>/`, then install it with `PY scripts/install_skill.py skills_out/<name>`: it validates the skill, installs it in `~/.claude/skills/<name>/` and backs up any previous version. Don't ask for confirmation (the user chose automatic install). If validation fails, fix the skill and run it again. Only install elsewhere (`--project`) or skip installing if the user asked for it. The only question you may ask during the whole run is about cookies, if YouTube requires them.
-6. **Final message**, short: skill name, where it is installed (and that deleting that folder removes it), number of methods, coverage (parts, contact sheets reviewed, densified passages), main uncertainties.
+6. **Final message**, short: skill name, where it is installed (and that deleting that folder removes it), number of methods, coverage (parts, contact sheets reviewed, densified passages), the four scores, step counts per tag, dry-run result, main uncertainties.
 
 ## Other requests
 
