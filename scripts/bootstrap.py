@@ -257,10 +257,13 @@ def step_selftest():
         except ValueError:
             nparts = 0
         prompt_ok = (tmp / "work" / "part_01" / "AGENT_PROMPT.md").exists()
+        vtests = ROOT / "tests" / "test_validate_skill.py"
+        code4 = sh([PY, str(vtests)], 120)[0] if vtests.exists() else 0
         detail = (f"test video → {len(m['frames'])} frames, {len(m['sheets'])} sheets, "
                   f"transcript: {m['transcript_source']}; validate_skill: {'OK' if code2 == 0 else 'FAILED'}; "
+                  f"validator tests: {'OK' if code4 == 0 else 'FAILED'}; "
                   f"split: {nparts} parts{'' if prompt_ok else ' (AGENT_PROMPT.md missing)'}")
-        ok = ok and code2 == 0 and nparts >= 2 and prompt_ok
+        ok = ok and code2 == 0 and code4 == 0 and nparts >= 2 and prompt_ok
         add("self-test", "ok" if ok else "fail", detail,
             "" if ok else "unexpected output: rerun the failing step by hand and read the error")
         return ok

@@ -6,13 +6,14 @@ description: Creates an isolated Python virtual environment for a project, insta
 # Python virtual environment + pinned requests
 
 > Verification: 6/6 steps executed successfully on 2026-11-26 in a throwaway folder on Windows (Git Bash, Python 3.12.4), with the `.venv/Scripts/` paths from Variants.
-> Not verified since steps 2–6 changed to `.venv/bin/...` paths: Linux/macOS. The earlier wording (activate, then plain `pip`) ran 6/6 on Linux, Python 3.13, on 2026-11-08.
+> Also 6/6 on 2026-11-26 on Linux (Ubuntu 24.04, Python 3.12.3) with the `.venv/bin/` paths as written. On a second Ubuntu 24.04 machine without the `python3.12-venv` package, step 1 created no `pip` and steps 3–6 failed (see Troubleshooting). Not verified: macOS.
 > Self-check: 12 ✔ · 13 ✔ · 14 ✔ · 15 ✔ · 16 ✔ (no hand-off steps) · 17 ✔ · 18 ✔
 
 At the end: an isolated `.venv/` folder, `requests` 2.32.3 installed in it, and a `requirements.txt` that recreates the environment identically.
 
 ## Prerequisites
 - Python 3 available as `python3` [t=0:08]
+- ➕ added: on Debian/Ubuntu, the `venv` support package for that Python version (e.g. `python3.12-venv`). Without it, step 1 builds a `.venv` with no `pip` (source: the error printed by `python3 -m venv` on Ubuntu 24.04, 2026-11-26).
 - Terminal open at the project root (`~/project` in the video) [t=0:05]
 
 ## Steps
@@ -64,6 +65,7 @@ grep requests requirements.txt
 ## Troubleshooting
 - Interactive terminal: `(.venv)` does not appear after `source .venv/bin/activate` → it was run with `sh` instead of `bash`/`zsh`: use `. .venv/bin/activate`. (➕ added, same source)
 - `.venv/bin/pip: No such file or directory` → on Windows, use `.venv\Scripts\pip` (see Variants), or step 1 has not run.
+- Step 1 prints "ensurepip is not available" (Debian/Ubuntu) → the `python3.X-venv` package is missing → it needs `sudo apt install python3.12-venv` (match your Python version). That needs admin rights, so Claude asks the user to run it rather than running it itself. Then delete the broken `.venv/` and redo step 1.
 - ➕ added: add `.venv/` to `.gitignore` so the environment is not versioned.
 
 ## When the user returns
