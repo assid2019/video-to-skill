@@ -46,6 +46,8 @@ Go through every item; fix each failure, then run the validator.
 - [ ] **17.** A "When the user returns" section exists with a persistence strategy (what to re-check, what to keep in a config file).
 - [ ] **18.** Read the skill as Claude about to execute it. Wherever you would think "I could do this myself", fix it.
 
+Record the result in the skill, under the Verification block: `> Self-check: 12 ✔ · 13 ✔ · 14 ✔ · 15 ✔ · 16 ✔ · 17 ✔ · 18 ✔`. An item you could not fix gets `✘` and a reason, e.g. `16 ✘ (connector path not documented)`. `validate_skill.py` warns when the line is missing, when an item is not marked, or when one is marked ✘. It also fails a skill where some step headings are tagged and others are not, or a heading carries more than one tag.
+
 ## D. Dry run (after validation)
 
 Replay **only the safe bash steps** in a throwaway folder, never in the user's files:
@@ -73,6 +75,7 @@ description: <What the skill lets you do, in one sentence.> Use when <situations
 > <what could not be verified and why>.
 > Assessment: Completeness <H/M/L> · Specificity <H/M/L> · Accuracy <H/M/L> · Executability <H/M/L> (target: <Claude Code | …>)
 > Steps: <X> [EXECUTE] · <Y> [HAND OFF] · <Z> [DECIDE]
+> Self-check: 12 ✔ · 13 ✔ · 14 ✔ · 15 ✔ · 16 ✔ · 17 ✔ · 18 ✔
 
 <1–2 sentences: what Claude executes, and what the user ends up with.>
 

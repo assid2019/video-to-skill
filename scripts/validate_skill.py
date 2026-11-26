@@ -5,8 +5,11 @@ validate_skill.py — lint a generated skill folder before installing it.
   python validate_skill.py path/to/skill-dir
 
 Errors (exit 1): missing/invalid frontmatter, bad name, description too long, secrets,
-broken relative links. Warnings: no timestamp citations, video narration left in,
-body too long, no Source section.
+broken relative links; in a skill that uses execution tags, a step under "## Steps"
+without exactly one of [EXECUTE] / [HAND OFF] / [DECIDE] in its heading.
+Warnings: no timestamp citations, video narration left in, body too long, no Source
+section, no execution tags at all (skill written before the tagging rule), self-check
+items 12-18 not recorded ("Self-check: 12 ✔ · 13 ✔ · … · 18 ✔") or recorded as failed (✘).
 """
 import re
 import sys
@@ -29,6 +32,53 @@ NARRATION = [
     r"(?i)\bsmash (that|the) like\b", r"(?i)\blike and subscribe\b", r"(?i)\bso what we'?re gonna do\b",
     r"(?i)\balors ce qu'on va faire\b", r"(?i)\bas you can see\b", r"(?i)\bcomme vous pouvez (le )?voir\b",
 ]
+TAG_RE = re.compile(r"\[(EXECUTE|HAND OFF|DECIDE)\]")
+SELF_CHECK_ITEMS = range(12, 19)
+
+
+def step_headings(body):
+    """(line number, heading) for every ### heading inside the "## Steps" section(s)."""
+    steps, in_steps, fence = [], False, False
+    for i, line in enumerate(body.splitlines(), 1):
+        if line.lstrip().startswith(("```", "~~~")):
+            fence = not fence
+            continue
+        if fence:
+            continue
+        if re.match(r"^##\s", line):
+            in_steps = bool(re.match(r"^##\s+Steps\b", line, re.I))
+        elif in_steps and re.match(r"^###\s", line):
+            steps.append((i, line.strip()))
+    return steps
+
+
+def check_tags(body, errors, warns):
+    steps = step_headings(body)
+    if not steps:
+        return
+    counts = [(ln, h, len(TAG_RE.findall(h))) for ln, h in steps]
+    if not any(c for _, _, c in counts):
+        warns.append(f"no execution tag on any of the {len(steps)} steps: tag each heading "
+                     "[EXECUTE], [HAND OFF] or [DECIDE] (skill written before the tagging rule?)")
+        return
+    for ln, h, c in counts:
+        if c != 1:
+            errors.append(f"step heading has {c} execution tags (exactly 1 expected): \"{h[:70]}\"")
+
+
+def check_self_check(text, warns):
+    m = re.search(r"(?im)^[>\s]*self-check\s*:(.*)$", text)
+    if not m:
+        warns.append("self-check items 12-18 not recorded: add \"> Self-check: 12 ✔ · 13 ✔ · … · 18 ✔\" "
+                     "under the Verification block (✘ + reason for an unresolved item)")
+        return
+    marks = dict(re.findall(r"\b(1[2-8])\s*([✔✓✘✗])", m.group(1)))
+    missing = [str(i) for i in SELF_CHECK_ITEMS if str(i) not in marks]
+    failed = [i for i, s in marks.items() if s in "✘✗"]
+    if missing:
+        warns.append(f"self-check line does not mark item(s) {', '.join(missing)}")
+    if failed:
+        warns.append(f"self-check item(s) {', '.join(sorted(failed))} marked as failed (✘): fix or explain in the skill")
 
 
 def parse_frontmatter(text):
@@ -103,6 +153,8 @@ def main():
             warns.append(f"video narration left in the text (\"{m.group(0)}\") → rewrite as an instruction")
     if not re.search(r"(?i)source|provenance", text):
         warns.append("no Source section (video URL/title)")
+    check_tags(body, errors, warns)
+    check_self_check(text, warns)
 
     print(f"Skill: {name or '?'}  |  {n_lines} lines  |  {len(cites)} timestamp citations  |  {len(files)} files")
     for w in warns:

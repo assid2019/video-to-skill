@@ -16,7 +16,7 @@ Triggers: a video URL or file, "turn this video into a skill", "learn from this 
    Between watching the video and delivering the skill, apply [references/skill-template.md](references/skill-template.md) sections A–D in this order:
    - **Score before writing (A)**: Completeness, Specificity, Accuracy, Executability, each HIGH/MEDIUM/LOW, from narration **and** frames. Any MEDIUM → fill the gaps from official docs (checked, or marked `unchecked`). LOW with nothing recoverable → no skill, report why. Executability LOW → write it as a guided checklist and say so at the end, without asking.
    - **Tag every step (B)**: `[EXECUTE]` (Claude runs it: shell, code, device CLI over SSH), `[HAND OFF]` (exact click path or command, then "Wait for confirmation before continuing."), `[DECIDE]` (options + trade-offs). Keep every `[t=MM:SS]` citation.
-   - **Self-check items 12–18 (C)**, fix every failure, **then** `PY scripts/validate_skill.py skills_out/<name>`.
+   - **Self-check items 12–18 (C)**, fix every failure, record the result as a `> Self-check: 12 ✔ · … · 18 ✔` line in the skill, **then** `PY scripts/validate_skill.py skills_out/<name>`.
    - **Dry run (D)**: replay only the safe bash steps in a `mktemp -d` folder (local, no sudo, no network/system change, no remote device). Walk through device and hand-off steps on paper. Write the honest result in the skill's Verification block.
 4. **Video longer than 45 min** — long-video mode of SKILL.md:
    - one `general-purpose` sub-agent **per part, all launched in parallel**, with the instruction: "Read and carry out `<absolute path>/part_NN/AGENT_PROMPT.md`. Write the notes in <the user's language>. Only write the notes file it names. Reply in 3 lines.";
